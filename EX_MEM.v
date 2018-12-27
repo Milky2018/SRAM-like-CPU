@@ -5,6 +5,7 @@ module EX_MEM(
     input         rst,
     input         EX_stall,
     input         MEM_stall,
+	input         memory_stall,
 	input         EX_invalid,
 
     input  [31:0] EX_out_ALUresult,
@@ -24,6 +25,7 @@ module EX_MEM(
 	input         EX_reserved_exception,
 	input         EX_overflow_exception,
 	input         EX_AdES_exception,
+	input         EX_AdEL_exception,
 	input         EX_AdEF_exception,
 	input         EX_slot,
 
@@ -44,8 +46,11 @@ module EX_MEM(
 	output        MEM_reserved_exception,
 	output        MEM_overflow_exception,
 	output        MEM_AdES_exception,
+	output        MEM_AdEL_exception,
 	output        MEM_AdEF_exception,
-	output        MEM_slot 
+	output        MEM_slot,
+
+	output [31:0] MEM_exec_PC
 );
 	
 	reg [31:0] reg_ALUresult;
@@ -65,8 +70,11 @@ module EX_MEM(
 	reg		   reg_reserved_exception;
 	reg        reg_overflow_exception;
 	reg        reg_AdES_exception;
+	reg        reg_AdEL_exception;
 	reg        reg_AdEF_exception;
 	reg        reg_slot;
+
+	reg [31:0] reg_exec_PC;
 
     assign MEM_in_ALUresult       = reg_ALUresult;
     assign MEM_in_MD_data         = reg_MD_data;
@@ -85,51 +93,103 @@ module EX_MEM(
 	assign MEM_reserved_exception = reg_reserved_exception;
 	assign MEM_overflow_exception = reg_overflow_exception;
 	assign MEM_AdES_exception     = reg_AdES_exception;
+	assign MEM_AdEL_exception     = reg_AdEL_exception;
 	assign MEM_AdEF_exception     = reg_AdEF_exception;
 	assign MEM_slot               = reg_slot;
 
+	assign MEM_exec_PC            = reg_exec_PC;
+
 	always @(posedge clk) begin
-		if (rst | (EX_stall & ~MEM_stall) | EX_invalid) begin
+		if (rst | (EX_stall & ~MEM_stall) | (EX_invalid & ~MEM_stall)) begin
 	        reg_ALUresult       <= 32'd0;
 	        reg_MD_data         <= 32'd0;
 	        reg_PC              <= 32'hbfc00000;
-			reg_bad_inst        <= 32'hbfc00000;
+			// reg_bad_inst        <= 32'hbfc00000;
 	        reg_instruction     <= 32'd0;
-	        reg_data_sram_addr  <= 32'd0;
+	        // reg_data_sram_addr  <= 32'd0;
 	        reg_data_sram_wdata <= 32'd0;
 			reg_data_sram_en    <= 1'b0;
 	        reg_RFdst           <= 3'b000;
 	        reg_RFsrc           <= 5'b00000;
 			reg_RFdtl           <= 6'd0;
 			reg_cp0_data        <= 32'd0;
-			reg_syscall_exception <= 1'b0;
-			reg_break_exception <= 1'b0;
-			reg_reserved_exception <= 1'b0;
-			reg_overflow_exception <= 1'b0;
-			reg_AdES_exception  <= 1'b0;
-			reg_AdEF_exception  <= 1'b0;
-			reg_slot            <= 1'b0;
+			// reg_syscall_exception <= 1'b0;
+			// reg_break_exception <= 1'b0;
+			// reg_reserved_exception <= 1'b0;
+			// reg_overflow_exception <= 1'b0;
+			// reg_AdES_exception  <= 1'b0;
+			// reg_AdEF_exception  <= 1'b0;
+			// reg_slot            <= 1'b0;
 		end else if (MEM_stall) begin
 		end else begin
 	        reg_ALUresult       <= EX_out_ALUresult;
 	        reg_MD_data         <= EX_out_MD_data;
 	        reg_PC              <= EX_out_PC;
-			reg_bad_inst        <= EX_bad_inst;
+			// reg_bad_inst        <= EX_bad_inst;
 	        reg_instruction     <= EX_out_instruction;
-	        reg_data_sram_addr  <= EX_out_data_sram_addr;
+	        // reg_data_sram_addr  <= EX_out_data_sram_addr;
 	        reg_data_sram_wdata <= EX_out_data_sram_wdata;
 			reg_data_sram_en    <= EX_out_data_sram_en;
 	        reg_RFdst           <= EX_out_RFdst;
 	        reg_RFsrc           <= EX_out_RFsrc;
 			reg_RFdtl           <= EX_out_RFdtl;
 			reg_cp0_data        <= EX_out_cp0_data;
+			// reg_syscall_exception <= EX_syscall_exception;
+			// reg_break_exception <= EX_break_exception;
+			// reg_reserved_exception <= EX_reserved_exception;
+			// reg_overflow_exception <= EX_overflow_exception;
+			// reg_AdES_exception  <= EX_AdES_exception;
+			// reg_AdEF_exception  <= EX_AdEF_exception;
+			// reg_slot            <= EX_slot;
+		end
+	end
+	
+	always @(posedge clk) begin
+		if (rst | (EX_stall & ~memory_stall) | (EX_invalid & ~memory_stall)) begin
+	        // reg_ALUresult       <= 32'd0;
+	        // reg_MD_data         <= 32'd0;
+	        // reg_PC              <= 32'hbfc00000;
+			reg_bad_inst        <= 32'hbfc00000;
+	        // reg_instruction     <= 32'd0;
+	        reg_data_sram_addr  <= 32'd0;
+	        // reg_data_sram_wdata <= 32'd0;
+			// reg_data_sram_en    <= 1'b0;
+	        // reg_RFdst           <= 3'b000;
+	        // reg_RFsrc           <= 5'b00000;
+			// reg_RFdtl           <= 6'd0;
+			// reg_cp0_data        <= 32'd0;
+			reg_syscall_exception <= 1'b0;
+			reg_break_exception <= 1'b0;
+			reg_reserved_exception <= 1'b0;
+			reg_overflow_exception <= 1'b0;
+			reg_AdES_exception  <= 1'b0;
+			reg_AdEL_exception  <= 1'b0;
+			reg_AdEF_exception  <= 1'b0;
+			reg_slot            <= 1'b0;
+			reg_exec_PC         <= 32'hbfc00000;
+		end else if (memory_stall) begin
+		end else begin
+	        // reg_ALUresult       <= EX_out_ALUresult;
+	        // reg_MD_data         <= EX_out_MD_data;
+	        // reg_PC              <= EX_out_PC;
+			reg_bad_inst        <= EX_bad_inst;
+	        // reg_instruction     <= EX_out_instruction;
+	        reg_data_sram_addr  <= EX_out_data_sram_addr;
+	        // reg_data_sram_wdata <= EX_out_data_sram_wdata;
+			// reg_data_sram_en    <= EX_out_data_sram_en;
+	        // reg_RFdst           <= EX_out_RFdst;
+	        // reg_RFsrc           <= EX_out_RFsrc;
+			// reg_RFdtl           <= EX_out_RFdtl;
+			// reg_cp0_data        <= EX_out_cp0_data;
 			reg_syscall_exception <= EX_syscall_exception;
 			reg_break_exception <= EX_break_exception;
 			reg_reserved_exception <= EX_reserved_exception;
 			reg_overflow_exception <= EX_overflow_exception;
 			reg_AdES_exception  <= EX_AdES_exception;
+			reg_AdEL_exception  <= EX_AdEL_exception;
 			reg_AdEF_exception  <= EX_AdEF_exception;
 			reg_slot            <= EX_slot;
+			reg_exec_PC         <= EX_out_PC;
 		end
 	end
 

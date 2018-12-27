@@ -21,7 +21,7 @@ module IF_ID(
 	reg [31:0] reg_bad_inst;
 
 	always @(posedge clk) begin
-		if (rst | IF_invalid | (IF_stall & ~ID_stall)) begin
+		if (rst | (IF_invalid & ~ID_stall) | (IF_stall & ~ID_stall)) begin
 			reg_PC <= 32'hbfc00000;
 			reg_AdEF_exception <= 1'b0;
 			reg_bad_inst <= 32'hbfc00000;

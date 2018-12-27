@@ -7,9 +7,7 @@ module MEM_MRcontrol(
 	input  [1 :0] ea,
 
 	output [31:0] mem_data,
-	output [3 :0] RF_strb,
-
-	output        AdEL_exception
+	output [3 :0] RF_strb
 );
 
 	wire [31:0] word_data = data_rdata;
@@ -56,8 +54,8 @@ module MEM_MRcontrol(
 					  ({32{RFdtl[`RF_dtl_lh  ]}} &   lh_data) |
 					  ({32{RFdtl[`RF_dtl_lhu ]}} &  lhu_data);
 
-	assign AdEL_exception = (data_en & RFdtl[`RF_dtl_word] & (ea != 2'b00)) |
-							(RFdtl[`RF_dtl_lh] & (ea[0] == 1'b1)) | 
-							(RFdtl[`RF_dtl_lhu] & (ea[0] == 1'b1));
+	// assign AdEL_exception = (data_en & RFdtl[`RF_dtl_word] & (ea != 2'b00)) |
+	// 						(RFdtl[`RF_dtl_lh] & (ea[0] == 1'b1)) | 
+	// 						(RFdtl[`RF_dtl_lhu] & (ea[0] == 1'b1));
 
 endmodule

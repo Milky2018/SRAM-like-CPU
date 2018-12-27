@@ -13,7 +13,7 @@ module ID_cp0(
     input  [31:0] ID_PC,
     // input  [31:0] EX_PC,
     // input  [31:0] MEM_PC,
-    input  [31:0] WB_PC,
+    input  [31:0] WB_exec_PC,
     input         ID_slot,
     input         WB_slot,
 
@@ -26,14 +26,16 @@ module ID_cp0(
     input         ID_reserved_exception,
     input         EX_overflow_exception,
     input         EX_AdES_exception,
-    input         MEM_AdEL_exception,
+    input         EX_AdEL_exception,
 
     input         ID_eret,
 
     output [31:0] rdata,
     output [31:0] EPC_data,
     output        exception,
-    output        interrupt
+    output        lasting_int,
+
+    input         memory_stall
 );
 
     wire Bev = 1'b1;
@@ -67,11 +69,19 @@ module ID_cp0(
 
     wire IF_exception = IF_AdEF_exception;
     wire ID_exception = ID_syscall_exception | ID_break_exception | ID_reserved_exception;
-    wire EX_excetion = EX_overflow_exception | EX_AdES_exception;
-    wire MEM_exception = MEM_AdEL_exception;
+    wire EX_excetion = EX_overflow_exception | EX_AdES_exception | EX_AdEL_exception;
+    wire MEM_exception = 1'b0;
 
-    assign exception = IF_exception | ID_exception | EX_excetion | MEM_exception |
+    assign exception = IF_exception | ID_exception | EX_excetion | MEM_exception | lasting_int |
                        interrupt;
+
+    reg interrupt_reg;
+    always @(posedge clk) begin
+        interrupt_reg <= interrupt ? 1'b1 :
+                         ~memory_stall ? 1'b0 :
+                         interrupt_reg;
+    end
+    assign lasting_int = interrupt | interrupt_reg;
 
     // BadVAddr 8
     wire [31:0] EX_data_addr = data_addr;
@@ -83,8 +93,8 @@ module ID_cp0(
             BadVAddr <= bad_inst_addr;
         else if (EX_AdES_exception)
             BadVAddr <= EX_data_addr;
-        else if (MEM_AdEL_exception)
-            BadVAddr <= MEM_data_addr;
+        else if (EX_AdEL_exception)
+            BadVAddr <= EX_data_addr;
     end
 
     assign r[`BadVAddr] = BadVAddr;
@@ -221,7 +231,7 @@ module ID_cp0(
             ExcCode <= 5'h5;
         else if (EX_overflow_exception)
             ExcCode <= 5'hc;
-        else if (MEM_AdEL_exception)
+        else if (EX_AdEL_exception)
             ExcCode <= 5'h4;
     end
 
@@ -236,7 +246,7 @@ module ID_cp0(
         else if (~Exl & IF_AdEF_exception)
             EPC <= bad_inst_addr;
         else if (~Exl & exception)
-            EPC <= WB_slot ? WB_PC - 32'd4 : WB_PC;
+            EPC <= WB_slot ? WB_exec_PC - 32'd4 : WB_exec_PC;
         else if (wen == 1'b1 && waddr == `EPC)
             EPC <= wdata;
     end

@@ -6,7 +6,7 @@ module ID_IRbuffer(
 	input  [31:0] inst_sram_rdata,
 	input  [31:0] ID_in_PC,
 	
-	output [31:0] ID_instruction,
+	output reg [31:0] ID_instruction,
 	output [31:0] ID_out_PC
 );
 
@@ -21,15 +21,19 @@ module ID_IRbuffer(
 			PC_buffer      <= 32'hbfc00000;
 			ID_stall_reg   <= 1'b0;
 			IF_invalid_reg <= 1'b0;
+			ID_instruction <= 32'd0;
 		end else begin
 			IR_buffer      <= ID_instruction;
 			PC_buffer      <= ID_out_PC;
 			ID_stall_reg   <= ID_stall;
 			IF_invalid_reg <= IF_invalid;
+			ID_instruction <= ID_stall ? ID_instruction :
+			 				  IF_invalid ? 32'h0 :
+							  inst_sram_rdata;
 		end
 	end
 
-	assign ID_instruction = ID_stall_reg ? IR_buffer : IF_invalid_reg ? 32'h0 : inst_sram_rdata;
+	// assign ID_instruction = ID_stall_reg ? IR_buffer : IF_invalid_reg ? 32'h0 : inst_sram_rdata;
 	assign ID_out_PC      = ID_stall_reg ? PC_buffer : IF_invalid_reg ? 32'hbfc00000 : ID_in_PC;
 
 endmodule

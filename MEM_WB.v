@@ -2,6 +2,7 @@ module MEM_WB(
  	input         clk,
     input         rst,
     input         MEM_stall,
+	input         memory_stall,
 	input         MEM_invalid,
 
 	input  [31:0] MEM_out_data_sram_addr,
@@ -19,6 +20,7 @@ module MEM_WB(
 	input         MEM_AdEL_exception,
 	input         MEM_AdEF_exception,
 	input         MEM_slot,
+	input  [31:0] MEM_exec_PC,
 
 	output [31:0] WB_in_data_sram_addr,
     output [31:0] WB_in_RF_wdata,
@@ -34,7 +36,8 @@ module MEM_WB(
 	output        WB_AdES_exception,
 	output        WB_AdEL_exception,
 	output        WB_AdEF_exception,
-	output        WB_slot
+	output        WB_slot,
+	output [31:0] WB_exec_PC
 );
 
 	reg [31:0] reg_data_sram_addr;
@@ -52,6 +55,7 @@ module MEM_WB(
 	reg        reg_AdEL_exception;
 	reg        reg_AdEF_exception;
 	reg        reg_slot;
+	reg [31:0] reg_exec_PC;
 
 	assign WB_in_data_sram_addr  = reg_data_sram_addr;
     assign WB_in_RF_wdata        = reg_RF_wdata;
@@ -68,40 +72,74 @@ module MEM_WB(
 	assign WB_AdEL_exception     = reg_AdEL_exception;
 	assign WB_AdEF_exception     = reg_AdEF_exception;
 	assign WB_slot               = reg_slot;
+	assign WB_exec_PC            = reg_exec_PC;
 
 	always @(posedge clk) begin
 		if (rst | MEM_stall | MEM_invalid) begin
-			reg_data_sram_addr     <= 32'd0;
+			// reg_data_sram_addr     <= 32'd0;
 			reg_RF_wdata           <= 32'd0;
 			reg_RF_waddr           <= 5'd0;
 			reg_RF_strb            <= 4'b1111;
 			reg_RF_wen             <= 1'b0;
 			reg_PC                 <= 32'hbfc00000;
-			reg_bad_inst           <= 32'hbfc00000;
-			reg_syscall_exception  <= 1'b0;
-			reg_break_exception    <= 1'b0;
-			reg_reserved_exception <= 1'b0;
-			reg_overflow_exception <= 1'b0;
-			reg_AdES_exception     <= 1'b0;
-			reg_AdEL_exception     <= 1'b0;
-			reg_AdEF_exception     <= 1'b0;
-			reg_slot               <= 1'b0;
+
+			// reg_bad_inst           <= 32'hbfc00000;
+			// reg_syscall_exception  <= 1'b0;
+			// reg_break_exception    <= 1'b0;
+			// reg_reserved_exception <= 1'b0;
+			// reg_overflow_exception <= 1'b0;
+			// reg_AdES_exception     <= 1'b0;
+			// reg_AdEL_exception     <= 1'b0;
+			// reg_AdEF_exception     <= 1'b0;
+			// reg_slot               <= 1'b0;
 		end else begin
-			reg_data_sram_addr     <= MEM_out_data_sram_addr;
+			// reg_data_sram_addr     <= MEM_out_data_sram_addr;
 			reg_RF_wdata           <= MEM_out_RF_wdata;
 			reg_RF_waddr           <= MEM_out_RF_waddr;
 			reg_RF_strb            <= MEM_out_RF_strb;
 			reg_RF_wen             <= MEM_out_RF_wen;
 			reg_PC                 <= MEM_out_PC;
+
+			// reg_bad_inst           <= MEM_bad_inst;
+			// reg_syscall_exception  <= MEM_syscall_exception;
+			// reg_break_exception    <= MEM_break_exception;
+			// reg_reserved_exception <= MEM_reserved_exception;
+			// reg_overflow_exception <= MEM_overflow_exception;
+			// reg_AdES_exception     <= MEM_AdES_exception;
+			// reg_AdEL_exception     <= MEM_AdEL_exception;
+			// reg_AdEF_exception     <= MEM_AdEF_exception;
+			// reg_slot               <= MEM_slot;
+		end
+	end
+
+	always @(posedge clk) begin
+		if (rst | (MEM_stall & ~memory_stall)) begin
+			reg_data_sram_addr     <= 32'd0;
+
+			reg_AdES_exception     <= 1'b0;
+			reg_AdEL_exception     <= 1'b0;
+			reg_AdEF_exception     <= 1'b0;
+			reg_slot               <= 1'b0;
+			reg_bad_inst           <= 32'hbfc00000;
+			reg_syscall_exception  <= 1'b0;
+			reg_break_exception    <= 1'b0;
+			reg_reserved_exception <= 1'b0;
+			reg_overflow_exception <= 1'b0;
+			reg_exec_PC            <= 32'hbfc00000;
+		end else if (memory_stall) begin
+		end else begin
+		    reg_data_sram_addr     <= MEM_out_data_sram_addr;
+			
+			reg_AdES_exception     <= MEM_AdES_exception;
+			reg_AdEL_exception     <= MEM_AdEL_exception;
+			reg_AdEF_exception     <= MEM_AdEF_exception;
+			reg_slot               <= MEM_slot;
 			reg_bad_inst           <= MEM_bad_inst;
 			reg_syscall_exception  <= MEM_syscall_exception;
 			reg_break_exception    <= MEM_break_exception;
 			reg_reserved_exception <= MEM_reserved_exception;
 			reg_overflow_exception <= MEM_overflow_exception;
-			reg_AdES_exception     <= MEM_AdES_exception;
-			reg_AdEL_exception     <= MEM_AdEL_exception;
-			reg_AdEF_exception     <= MEM_AdEF_exception;
-			reg_slot               <= MEM_slot;
+			reg_exec_PC            <= MEM_exec_PC;
 		end
 	end
 

@@ -97,7 +97,7 @@ module ID_EX(
 	assign EX_slot             = reg_slot;
 
 	always @(posedge clk) begin
-		if (rst | (ID_stall & ~EX_stall) | ID_invalid) begin
+		if (rst | (ID_stall & ~EX_stall) | (ID_invalid & ~EX_stall)) begin
 			reg_PC            <= 32'hbfc00000;
 			reg_bad_inst      <= 32'hbfc00000;
 			reg_instruction   <= 32'd0;
